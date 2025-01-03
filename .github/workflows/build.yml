@@ -7,19 +7,31 @@ on:
 
 jobs:
   build-and-release:
+    strategy:
+      matrix:
+        GOOS: [linux]
+        GOARCH: [amd64, arm, arm64, ppc64, ppc64le, mips, mipsle, mips64, mips64le, s390, s390x]
+      max-parallel: 10
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-          
-      - name: Generate build files
-        uses: thatisuday/go-cross-build@v1
-        with:
-            platforms: 'linux/amd64, linux/386, linux/arm, linux/arm64, linux/ppc64le, linux/riscv64, linux/s390x'
-            name: 'v2dat'
-            compress: 'false'
-            dest: 'dist'
 
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.22.10'
+
+      - name: Cross-compile for $goos-$goarch
+        env:
+          GOOS: ${{ matrix.GOOS }}
+          GOARCH: ${{ matrix.GOARCH }}
+        run: |
+          mkdir dist
+          GOOS=$GOOS GOARCH=$GOARCH go build -o dist/v2dat-$GOOS-$GOARCH main.go
+ 
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
