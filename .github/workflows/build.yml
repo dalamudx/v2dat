@@ -29,10 +29,10 @@ jobs:
           GOOS=$goos GOARCH=$goarch go build -o v2dat-$goos-$goarch main.go
 
       - name: Archive and upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: $goos-$goarch-app
-          path: $goos-$goarch-app
+          name: v2dat-$goos-$goarch
+          path: v2dat-$goos-$goarch
 
       - name: Create a new release
         uses: actions/create-release@v1
