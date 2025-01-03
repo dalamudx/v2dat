@@ -7,14 +7,7 @@ on:
 
 jobs:
   build-and-release:
-    strategy:
-      matrix:
-        goos: [linux]
-        goarch: [amd64, arm, arm64, ppc64, ppc64le, mips, mipsle, mips64, mips64le, s390, s390x]
-      max-parallel: 10
-
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -23,23 +16,19 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '1.22.10'
-
-      - name: Cross-compile for $goos-$goarch
-        run: |
-          GOOS=$goos GOARCH=$goarch go build -o v2dat-$goos-$goarch main.go
-
-      - name: Archive and upload artifact
-        uses: actions/upload-artifact@v4
+          
+      - name: Generate build files
+        uses: thatisuday/go-cross-build@v1
         with:
-          name: v2dat-$goos-$goarch
-          path: v2dat-$goos-$goarch
+            platforms: 'linux/amd64, linux/386, linux/arm, linux/arm64, linux/ppc64le, linux/riscv64, linux/s390x'
+            name: 'v2dat'
+            compress: 'false'
+            dest: 'dist'
 
-      - name: Create a new release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_NAME: "v${GITHUB_RUN_NUMBER}"
-          RELEASE_BODY: "Automated release from GitHub Actions"
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          draft: false
-          prerelease: false
+          tag_name: v1.0.0
+          files: |
+            dist/*
